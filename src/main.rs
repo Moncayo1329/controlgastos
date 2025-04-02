@@ -1,4 +1,23 @@
+    use std::fs::OpenOptions;
+    use std::io::Write;
     use std::io;
+
+fn guardar_en_archivo(gastos: &Vec<Gasto>){
+    let mut archivo = OpenOptions::new()
+    .write(true)
+    .append(true)
+    .create(true)
+    .open("gastos.txt")
+    .expect("No se pudo abrir el archivo");
+
+    for gasto in gastos{
+        
+        writeln!(archivo,"{} - ${:.2}", gasto.descripcion, gasto.monto)
+            .expect("Error al escribir en el archivo");
+    }
+}
+
+
     #[derive(Debug)]
     enum Categoria {
         Alimentos,
@@ -89,11 +108,15 @@
         println!("Gasto agregado correctamente!\n");
     }
 
+    guardar_en_archivo(&gastos);  
+
     println!("\nResumen de gastos:");
     for gasto in &gastos{
         println!("- {}: ${:.2} ({:?})", gasto.descripcion, gasto.monto, gasto.categoria);
     }
     let total: f64 = gastos.iter().map(|g| g.monto).sum();
     println!("Total gastado: ${:.2}", total);
+
+    println!("Los gastos han sido guardados en 'gastos.txt'.");
 
     }
