@@ -1,11 +1,14 @@
-import './App.css';
+import './App.css'; 
+import Gastos from './yapita';
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
+     
        <h1>La yapita</h1>
-      </header>
+       <h3>Si no te mueres manana es mejor controlar tus gastos.</h3>
+       <h1>Controla tus gastos :</h1>
+       <Gastos />
     </div>
   );
 }
