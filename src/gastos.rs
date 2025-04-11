@@ -22,7 +22,7 @@ Otros,
 pub struct Gasto {
     pub descripcion:String,
     pub monto: f64,
-    pub categoria: Categoria.
+    pub categoria: Categoria,
 
 }
 

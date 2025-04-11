@@ -1,6 +1,8 @@
+    mod gastos;
+
     use std::fs::OpenOptions;
-    use std::io::Write;
-    use std::io;
+    use std::io::{self, Write};
+    use gastos::{Gasto,Categoria,filtrar_por_categoria};
 
 fn guardar_en_archivo(gastos: &Vec<Gasto>){
     let mut archivo = OpenOptions::new()
@@ -17,28 +19,13 @@ fn guardar_en_archivo(gastos: &Vec<Gasto>){
     }
 }
 
-
-    #[derive(Debug)]
-    enum Categoria {
-        Alimentos,
-        Transporte,
-        Entretenimiento,
-        Comida,
-        Otros, 
-    }
-
-    struct Gasto {
-        descripcion: String,
-        monto: f64, // f64 es para numero decimales.
-        categoria:Categoria,
-    }
-
     fn main() {
 
         let mut gastos: Vec<Gasto> = Vec::new();
 
 
-    loop{
+
+    loop {
 
         // Crear variables para almacenar los datos ingresados por el usuario.
         let mut descripcion = String::new();
@@ -117,6 +104,42 @@ fn guardar_en_archivo(gastos: &Vec<Gasto>){
     let total: f64 = gastos.iter().map(|g| g.monto).sum();
     println!("Total gastado: ${:.2}", total);
 
+    
+// Codigo de filtrar gastos aqui. 
+
+println!("Deseas filtrar por categoria?");
+let mut input = String::new();
+io::stdin().read_line(&mut input).unwrap();
+
+if input.trim().to_lowercase() == "s"{
+println!("Ingrese la categoría (alimentos, transporte, entretenimiento, comida, otros):");
+let mut cat_input = String::new();
+io::stdin().read_line(&mut cat_input).unwrap();
+
+let cat = match cat_input.trim().to_lowercase().as_str() {
+    "alimentos" => Categoria::Alimentos,
+    "transporte" => Categoria::Transporte,
+    "entretenimiento" => Categoria::Entretenimiento,
+    "comida" => Categoria::Comida,
+    "otros" => Categoria::Otros,
+    _ => {
+        println!("Categoría no válida.");
+        return;
+    }
+};
+
+let filtrados = filtrar_por_categoria(&gastos, cat);
+        println!("\nGastos filtrados por {:?}:", cat);
+        for gasto in filtrados {
+            println!("{}", gasto);
+        }
+    }
+
+
     println!("Los gastos han sido guardados en 'gastos.txt'.");
 
     }
+
+
+
+
