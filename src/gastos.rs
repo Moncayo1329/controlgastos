@@ -1,5 +1,5 @@
 // gastos.rs
-
+use serde::{Deserialize, Serialize};
 use std::fmt;
 
 
@@ -16,7 +16,7 @@ Otros,
 
 
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 
 
 pub struct Gasto {

@@ -1,145 +1,254 @@
-    mod gastos;
+mod gastos;
 
-    use std::fs::OpenOptions;
-    use std::io::{self, Write};
-    use gastos::{Gasto,Categoria,filtrar_por_categoria};
+use axum::{
+    extract::{Path, State},
+    routing::{get, post},
+    Json, Router,
+};
+use std::fs::OpenOptions;
+use std::io::Write;
+use gastos::{Gasto, Categoria, filtrar_por_categoria};
+use serde::{Deserialize, Serialize};
+use std::{net::SocketAddr, sync::{Arc, Mutex}};
+use tokio::time::{sleep, Duration};
+use reqwest::Client;
 
-fn guardar_en_archivo(gastos: &Vec<Gasto>){
-    let mut archivo = OpenOptions::new()
-    .write(true)
-    .append(true)
-    .create(true)
-    .open("gastos.txt")
-    .expect("No se pudo abrir el archivo");
+// Tipo para la base de datos en memoria
+type BD = Arc<Mutex<Vec<Gasto>>>;
 
-    for gasto in gastos{
-        
-        writeln!(archivo,"{} - ${:.2}", gasto.descripcion, gasto.monto)
-            .expect("Error al escribir en el archivo");
-    }
+// Estructura para entrada de gastos
+#[derive(Deserialize, Serialize)]
+struct GastoInput {
+    descripcion: String,
+    monto: f64,
+    categoria: Categoria,
 }
 
-    fn main() {
+// Función para guardar gastos en archivo
+fn guardar_en_archivo(gastos: &Vec<Gasto>) -> std::io::Result<()> {
+    let mut archivo = OpenOptions::new()
+        .write(true)
+        .truncate(true) // Sobrescribe para evitar duplicados
+        .create(true)
+        .open("gastos.txt")?;
 
-        let mut gastos: Vec<Gasto> = Vec::new();
-
-
-
-    loop {
-
-        // Crear variables para almacenar los datos ingresados por el usuario.
-        let mut descripcion = String::new();
-        let mut monto = String::new();
-        let mut  categoria = String::new();
-
-    
-
-
-        // Pedir al usuario que ingrese la descripción del gasto.
-        println!("¿Cuál es la descripción del gasto? o escriba salir para terminar");
-        io::stdin()
-            .read_line(&mut descripcion)
-            .expect("Error al leer la entrada");
-
-    if descripcion.trim().eq_ignore_ascii_case("salir"){
-        break;
+    for gasto in gastos {
+        writeln!(
+            archivo,
+            "{} - ${:.2} - {:?}",
+            gasto.descripcion, gasto.monto, gasto.categoria
+        )?;
     }
+    Ok(())
+}
 
+// Rutas de la API
 
-        // Pedir al usuario que ingrese el gasto 
-        println!("¿Cuál es el monto del gasto?");
-        io::stdin()
-            .read_line(&mut monto)
-            .expect("Error al leer la entrada");
+async fn obtener_gastos(State(db): State<BD>) -> Json<Vec<Gasto>> {
+    let db = db.lock().unwrap();
+    Json(db.clone())
+}
 
-// Pedir al usuario que ingrese el gasto 
+async fn agregar_gasto(State(db): State<BD>, Json(payload): Json<GastoInput>) -> &'static str {
+    let mut db = db.lock().unwrap();
+    let nuevo_gasto = Gasto {
+        descripcion: payload.descripcion,
+        monto: payload.monto,
+        categoria: payload.categoria,
+    };
+    db.push(nuevo_gasto);
+    if let Err(e) = guardar_en_archivo(&db) {
+        eprintln!("Error al guardar en archivo: {}", e);
+    }
+    "Gasto agregado"
+}
 
-            println!("¿Cuál es la categoria del gasto");
-        io::stdin()
-            .read_line(&mut categoria)
-            .expect("Error al leer la categoria");
-
-
-      // Categoria 
-      let categoria = match categoria.trim().to_lowercase().as_str(){
+async fn gastos_por_categoria(Path(cat): Path<String>, State(db): State<BD>) -> Json<Vec<Gasto>> {
+    let cat = match cat.to_lowercase().as_str() {
         "comida" => Categoria::Comida,
         "transporte" => Categoria::Transporte,
         "entretenimiento" => Categoria::Entretenimiento,
-      "alimentos" => Categoria::Alimentos,
+        "alimentos" => Categoria::Alimentos,
         "otros" => Categoria::Otros,
-        _ => {
-            println!("Categoría inválida. Intente nuevamente.");
-            continue;
-        }
+        _ => Categoria::Otros,
     };
 
- 
+    let db = db.lock().unwrap();
+    let filtrados = filtrar_por_categoria(&db, cat);
+    Json(filtrados)
+}
 
+// Consola que interactúa con la API
+async fn consola() {
+    let client = Client::new();
+    let base_url = "http://127.0.0.1:4000";
 
+    loop {
+        println!("\nOpciones:");
+        println!("1. Agregar gasto");
+        println!("2. Ver todos los gastos");
+        println!("3. Filtrar gastos por categoría");
+        println!("4. Salir");
 
-        // Convertir el monto ingresado (que es texto) a un número decimal.
-        let monto: f64 = match monto.trim().parse() {
-        Ok(num) => num,
-        Err(_) => {
-            println!("Porfavor ingrese un numero valido");
-            continue;
+        let mut opcion = String::new();
+        std::io::stdin()
+            .read_line(&mut opcion)
+            .expect("Error al leer la entrada");
+        let opcion = opcion.trim();
+
+        match opcion {
+            "1" => {
+                let mut descripcion = String::new();
+                let mut monto = String::new();
+                let mut categoria = String::new();
+
+                println!("Descripción del gasto (o 'salir' para cancelar):");
+                std::io::stdin()
+                    .read_line(&mut descripcion)
+                    .expect("Error al leer la entrada");
+
+                if descripcion.trim().eq_ignore_ascii_case("salir") {
+                    continue;
+                }
+
+                println!("Monto del gasto:");
+                std::io::stdin()
+                    .read_line(&mut monto)
+                    .expect("Error al leer la entrada");
+
+                let monto: f64 = match monto.trim().parse() {
+                    Ok(num) => num,
+                    Err(_) => {
+                        println!("Por favor, ingrese un número válido.");
+                        continue;
+                    }
+                };
+
+                println!("Categoría (comida, transporte, entretenimiento, alimentos, otros):");
+                std::io::stdin()
+                    .read_line(&mut categoria)
+                    .expect("Error al leer la entrada");
+
+                let categoria = match categoria.trim().to_lowercase().as_str() {
+                    "comida" => Categoria::Comida,
+                    "transporte" => Categoria::Transporte,
+                    "entretenimiento" => Categoria::Entretenimiento,
+                    "alimentos" => Categoria::Alimentos,
+                    "otros" => Categoria::Otros,
+                    _ => {
+                        println!("Categoría inválida.");
+                        continue;
+                    }
+                };
+
+                let gasto = GastoInput {
+                    descripcion: descripcion.trim().to_string(),
+                    monto,
+                    categoria,
+                };
+
+                match client
+                    .post(&format!("{}/gasto", base_url))
+                    .json(&gasto)
+                    .send()
+                    .await
+                {
+                    Ok(resp) => println!("Respuesta: {}", resp.text().await.unwrap_or_default()),
+                    Err(e) => println!("Error al agregar gasto: {}. Asegúrate de que el servidor esté corriendo.", e),
+                }
+            }
+            "2" => {
+                match client.get(&format!("{}/gastos", base_url)).send().await {
+                    Ok(resp) => {
+                        let gastos: Vec<Gasto> = resp.json().await.unwrap_or_default();
+                        if gastos.is_empty() {
+                            println!("No hay gastos registrados.");
+                        } else {
+                            println!("\nResumen de gastos:");
+                            let total: f64 = gastos.iter().map(|g| g.monto).sum();
+                            for gasto in &gastos {
+                                println!(
+                                    "- {}: ${:.2} ({:?})",
+                                    gasto.descripcion, gasto.monto, gasto.categoria
+                                );
+                            }
+                            println!("Total gastado: ${:.2}", total);
+                        }
+                    }
+                    Err(e) => println!("Error al obtener gastos: {}. Asegúrate de que el servidor esté corriendo.", e),
+                }
+            }
+            "3" => {
+                println!("Ingrese la categoría (comida, transporte, entretenimiento, alimentos, otros):");
+                let mut cat = String::new();
+                std::io::stdin()
+                    .read_line(&mut cat)
+                    .expect("Error al leer la entrada");
+                let cat = cat.trim().to_lowercase();
+
+                match client
+                    .get(&format!("{}/gastos/{}", base_url, cat))
+                    .send()
+                    .await
+                {
+                    Ok(resp) => {
+                        let gastos: Vec<Gasto> = resp.json().await.unwrap_or_default();
+                        if gastos.is_empty() {
+                            println!("No hay gastos en la categoría {}.", cat);
+                        } else {
+                            println!("\nGastos filtrados por {}:", cat);
+                            for gasto in gastos {
+                                println!(
+                                    "- {}: ${:.2} ({:?})",
+                                    gasto.descripcion, gasto.monto, gasto.categoria
+                                );
+                            }
+                        }
+                    }
+                    Err(e) => println!("Error al filtrar gastos: {}. Asegúrate de que el servidor esté corriendo.", e),
+                }
+            }
+            "4" => {
+                println!("Saliendo...");
+                break;
+            }
+            _ => println!("Opción inválida, por favor intenta de nuevo."),
         }
-
-        };
-
-        gastos.push(Gasto {
-            descripcion: descripcion.trim().to_string(),
-            monto,
-            categoria,
-        });
-        println!("Gasto agregado correctamente!\n");
     }
+}
 
-    guardar_en_archivo(&gastos);  
+#[tokio::main]
+async fn main() {
+    // Base de datos en memoria
+    let base_datos: BD = Arc::new(Mutex::new(Vec::new()));
 
-    println!("\nResumen de gastos:");
-    for gasto in &gastos{
-        println!("- {}: ${:.2} ({:?})", gasto.descripcion, gasto.monto, gasto.categoria);
-    }
-    let total: f64 = gastos.iter().map(|g| g.monto).sum();
-    println!("Total gastado: ${:.2}", total);
+    // Configurar rutas de la API
+    let app = Router::new()
+        .route("/gastos", get(obtener_gastos))
+        .route("/gasto", post(agregar_gasto))
+        .route("/gastos/:categoria", get(gastos_por_categoria))
+        .with_state(base_datos.clone());
 
-    
-// Codigo de filtrar gastos aqui. 
+    // Iniciar servidor en una tarea separada
+    let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
+    println!("Servidor corriendo en http://{}", addr);
 
-println!("Deseas filtrar por categoria?");
-let mut input = String::new();
-io::stdin().read_line(&mut input).unwrap();
-
-if input.trim().to_lowercase() == "s"{
-println!("Ingrese la categoría (alimentos, transporte, entretenimiento, comida, otros):");
-let mut cat_input = String::new();
-io::stdin().read_line(&mut cat_input).unwrap();
-
-let cat = match cat_input.trim().to_lowercase().as_str() {
-    "alimentos" => Categoria::Alimentos,
-    "transporte" => Categoria::Transporte,
-    "entretenimiento" => Categoria::Entretenimiento,
-    "comida" => Categoria::Comida,
-    "otros" => Categoria::Otros,
-    _ => {
-        println!("Categoría no válida.");
-        return;
-    }
-};
-
-let filtrados = filtrar_por_categoria(&gastos, cat);
-        println!("\nGastos filtrados por {:?}:", cat);
-        for gasto in filtrados {
-            println!("{}", gasto);
+    let server = tokio::spawn(async move {
+        if let Err(e) = axum::Server::bind(&addr)
+            .serve(app.into_make_service())
+            .await
+        {
+            eprintln!("Error en el servidor: {}", e);
         }
-    }
+    });
 
+    // Esperar un momento para asegurarnos de que el servidor esté listo
+    sleep(Duration::from_millis(100)).await;
 
-    println!("Los gastos han sido guardados en 'gastos.txt'.");
+    // Iniciar consola
+    consola().await;
 
-    }
-
-
-
+    // Terminar servidor al salir de la consola
+    server.abort();
+}
 
