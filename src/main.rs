@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::{Arc, Mutex}};
 use tokio::time::{sleep, Duration};
 use reqwest::Client;
+use axum::serve; // Asegúrate de importar Server
 
 // Tipo para la base de datos en memoria
 type BD = Arc<Mutex<Vec<Gasto>>>;
@@ -234,9 +235,12 @@ async fn main() {
     println!("Servidor corriendo en http://{}", addr);
 
     let server = tokio::spawn(async move {
-        if let Err(e) = axum::Server::bind(&addr)
-            .serve(app.into_make_service())
-            .await
+        if let Err(e) = serve(
+   tokio::net::TcpListener::bind(&addr).await.unwrap(),
+   app.into_make_service(),
+
+        )
+        .await
         {
             eprintln!("Error en el servidor: {}", e);
         }

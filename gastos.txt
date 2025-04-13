@@ -1,4 +1,2 @@
-pizza - $10.00
-comida buena - $20.00
-pizza - $15.00
-comida eh - $50.00
+comida y pizza - $50.00 - Alimentos
+comida - $40.00 - Entretenimiento

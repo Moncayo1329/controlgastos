@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 
-#[derive(Debug,Clone,Copy,PartialEq)]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 
 pub enum Categoria {
 Alimentos,
@@ -16,9 +16,7 @@ Otros,
 
 
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-
-
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Gasto {
     pub descripcion:String,
     pub monto: f64,
@@ -38,6 +36,10 @@ fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result{
 
 // filtrar x gastos 
 
-pub  fn filtrar_por_categoria(gastos: &Vec<Gasto>, categoria:Categoria) -> Vec<&Gasto> {
-    gastos.iter().filter(|g| g.categoria == categoria).collect()
+pub  fn filtrar_por_categoria(gastos: &Vec<Gasto>, categoria:Categoria) -> Vec<Gasto> {
+    gastos
+    .iter()
+    .filter(|g| g.categoria == categoria)
+    .cloned()
+    .collect()
 }
