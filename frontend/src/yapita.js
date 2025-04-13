@@ -1,9 +1,61 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from 'axios'
+const API_URL = 'http://127.0.0.1:4000'; // URL del backend
 
 const Gastos = () => {
+  const [gastos, setGastos ] = useState([])
   const [descripcion, setDescripcion] = useState("");
     const [monto,setMonto] = useState("");
     const [categoria, setCategoria] = useState("");
+ const [filtroCategoria, setFiltroCategoria] = useState('')
+
+
+useEffect(() => {
+  fetchGastos();
+},[]);
+
+
+// Funcion para Obtener gastos desde el backend
+
+const fetchGastos = async (categoria = '') => {
+
+try {
+const url = categoria ? ` ${API_URL}/gastos/${categoria}` : `${API_URL}/gastos`;
+const response = await axios.get(url);
+setGastos(response.data);
+} catch(error) {
+console.error('Error al obtener gastos', error);
+alert('No se pudieron cargar los gastos. Asegurate de que el backend este corriendo.')
+
+}
+};
+
+// Funcion para agregar UN GASTO. 
+const agregarGasto = async (e) => {
+  e.preventDefault();
+  try{
+    await axios.post(`${API_URL}/gasto`,{
+      descripcion,
+      monto:parseFloat(monto),
+      categoria,
+    });
+    alert('Gasto agregado');
+    setDescripcion('');
+    setMonto('');
+    fetchGastos(); // Actualizar la lista de gastos
+  } catch (error) {
+    console.error('Error al agregar gasto:', error);
+    alert('No se pudo agregar el gasto.');
+  }
+  };
+
+  // Función para filtrar por categoría
+  const filtrarGastos = () => {
+    fetchGastos(filtroCategoria.toLowerCase());
+  };
+
+
+
 
 
 // Funcion para el campo de monto como dinero
@@ -23,6 +75,7 @@ const handleMontoChange = (e) => {
   const inputValue = e.target.value;
   setMonto(formatMoney(inputValue));
 };
+
 
 
 
