@@ -12,7 +12,8 @@ use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::{Arc, Mutex}};
 use tokio::time::{sleep, Duration};
 use reqwest::Client;
-use axum::serve; // Asegúrate de importar Server
+use axum::serve; 
+use tower_http::cors::{Any, CorsLayer};// Asegúrate de importar Server
 
 // Tipo para la base de datos en memoria
 type BD = Arc<Mutex<Vec<Gasto>>>;
@@ -223,8 +224,17 @@ async fn main() {
     // Base de datos en memoria
     let base_datos: BD = Arc::new(Mutex::new(Vec::new()));
 
+// configurar Cors esto es porque tengo puertos diferentes y es para unirlos.
+let cors = CorsLayer::new()
+.allow_methods([axum::http::Method::GET, axum::http::Method::POST])
+        .allow_origin(Any); // Permite cualquier origen (ajusta en producción)
+
+
+
+        
     // Configurar rutas de la API
     let app = Router::new()
+        .route("/", get(|| async { "¡Servidor de Control de Gastos funcionando!" }))
         .route("/gastos", get(obtener_gastos))
         .route("/gasto", post(agregar_gasto))
         .route("/gastos/:categoria", get(gastos_por_categoria))

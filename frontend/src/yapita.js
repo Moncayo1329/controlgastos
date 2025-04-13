@@ -99,11 +99,13 @@ const handleSubmit = (e) => {
             {/* Campo de Descripción */}
           <div style={boxStyle}>
             <p><strong>Descripción:</strong></p>
-            <input 
+            <form onSubmit={agregarGasto}></form>
+          <input 
             type="text"
             placeholder="Escribe una descripcion"
             value={descripcion}
             onChange={(e) => setDescripcion(e.target.value)}
+            required            
             style={{ padding: "5px", width: "100%" }}
             />
           </div>
@@ -114,7 +116,8 @@ const handleSubmit = (e) => {
           type="text"
           placeholder="Escribe el monto"
           value={monto}
-          onChange={handleMontoChange}
+          onChange={(e) => setMonto(e.target.value)}
+         required
           style={{ padding: "5px", width: "100%" }}
         />
           </div>
@@ -131,9 +134,10 @@ const handleSubmit = (e) => {
             />
           </div>
         </div>
-      
+        </form>
     </div>
-    </form>
+    
+    
   );
 };
 // Reutilizamos el estilo de cada caja para mantenerlas iguales
