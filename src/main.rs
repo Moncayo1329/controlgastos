@@ -236,7 +236,7 @@ async fn main() {
             axum::http::Method::OPTIONS,
         ])
         .allow_origin("http://localhost:3000".parse::<axum::http::HeaderValue>().unwrap())
-        .allow_headers([axum::http::header::CONTENT_TYPE]);
+        .allow_headers([CONTENT_TYPE]);
 
     // Configurar rutas de la API
     let app = Router::new()
