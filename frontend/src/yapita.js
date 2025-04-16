@@ -24,14 +24,27 @@ const Gastos = () => {
       alert('No se pudieron cargar los gastos. Asegúrate de que el backend esté corriendo.');
     }
   };
-
-  const agregarGasto = async (e) => {
+async function agregarGasto (e)  {
     e.preventDefault();
     const montoNumerico = parseFloat(monto.replace(/[^0-9.]/g, ""));
     if (isNaN(montoNumerico)) {
       alert("Monto inválido");
       return;
     }
+
+const categoriasValidas = ["comida", "transporte", "entretenimiento", "alimentos", "otros"];
+if (!categoriasValidas.includes(categoria)) {
+  alert("Por favor, selecciona una categoría válida");
+  return;
+}
+
+const gasto = {
+  descripcion: descripcion.trim(),
+  monto: montoNumerico,
+  categoria: categoria,
+};
+console.log("Enviando gasto:", gasto); 
+
 
     try {
       await axios.post(`${API_URL}/gasto`, {
@@ -99,7 +112,7 @@ const Gastos = () => {
           <div style={boxStyle}>
             <p><strong>Categoría:</strong></p>
             <input
-              type="text"
+              type={categoria}
               placeholder="Escribe la categoría"
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}

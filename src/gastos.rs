@@ -4,7 +4,7 @@ use std::fmt;
 
 
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
-
+#[serde(rename_all = "lowercase")]
 pub enum Categoria {
 Alimentos,
 Transporte,

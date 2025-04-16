@@ -1,2 +1,5 @@
-comida y pizza - $50.00 - Alimentos
-comida - $40.00 - Entretenimiento
+comida - $20.00 - Comida
+agua - $2.30 - Alimentos
+regalo - $23.00 - Otros
+viaje a ecuador - $500.00 - Transporte
+piano - $300.00 - Entretenimiento
