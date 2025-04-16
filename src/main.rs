@@ -12,8 +12,10 @@ use serde::{Deserialize, Serialize};
 use std::{net::SocketAddr, sync::{Arc, Mutex}};
 use tokio::time::{sleep, Duration};
 use reqwest::Client;
-use axum::serve; 
-use tower_http::cors::{Any, CorsLayer};// Asegúrate de importar Server
+use axum::serve;
+use tokio::net::TcpListener;
+use tower_http::cors::CorsLayer;
+use axum::http::{HeaderValue, header::CONTENT_TYPE, Method};
 
 // Tipo para la base de datos en memoria
 type BD = Arc<Mutex<Vec<Gasto>>>;
@@ -30,7 +32,7 @@ struct GastoInput {
 fn guardar_en_archivo(gastos: &Vec<Gasto>) -> std::io::Result<()> {
     let mut archivo = OpenOptions::new()
         .write(true)
-        .truncate(true) // Sobrescribe para evitar duplicados
+        .truncate(true)
         .create(true)
         .open("gastos.txt")?;
 
@@ -45,7 +47,6 @@ fn guardar_en_archivo(gastos: &Vec<Gasto>) -> std::io::Result<()> {
 }
 
 // Rutas de la API
-
 async fn obtener_gastos(State(db): State<BD>) -> Json<Vec<Gasto>> {
     let db = db.lock().unwrap();
     Json(db.clone())
@@ -58,6 +59,7 @@ async fn agregar_gasto(State(db): State<BD>, Json(payload): Json<GastoInput>) ->
         monto: payload.monto,
         categoria: payload.categoria,
     };
+    println!("Gasto agregado: {:?}", nuevo_gasto); // Depuración
     db.push(nuevo_gasto);
     if let Err(e) = guardar_en_archivo(&db) {
         eprintln!("Error al guardar en archivo: {}", e);
@@ -219,42 +221,47 @@ async fn consola() {
     }
 }
 
+
+
 #[tokio::main]
 async fn main() {
     // Base de datos en memoria
     let base_datos: BD = Arc::new(Mutex::new(Vec::new()));
 
-// configurar Cors esto es porque tengo puertos diferentes y es para unirlos.
-let cors = CorsLayer::new()
-.allow_methods([axum::http::Method::GET, axum::http::Method::POST])
-        .allow_origin(Any); // Permite cualquier origen (ajusta en producción)
+    // Configurar CORS
+    let cors = CorsLayer::new()
+        .allow_methods([
+            axum::http::Method::GET,
+            axum::http::Method::POST,
+            axum::http::Method::OPTIONS,
+        ])
+        .allow_origin("http://localhost:3000".parse::<axum::http::HeaderValue>().unwrap())
+        .allow_headers([axum::http::header::CONTENT_TYPE]);
 
-
-
-        
     // Configurar rutas de la API
     let app = Router::new()
         .route("/", get(|| async { "¡Servidor de Control de Gastos funcionando!" }))
         .route("/gastos", get(obtener_gastos))
         .route("/gasto", post(agregar_gasto))
         .route("/gastos/:categoria", get(gastos_por_categoria))
+        .layer(cors)
         .with_state(base_datos.clone());
 
-    // Iniciar servidor en una tarea separada
-    let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
-    println!("Servidor corriendo en http://{}", addr);
+        // Iniciar servidor en una tarea separada
+let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
+println!("Servidor corriendo en http://{}", addr);
 
-    let server = tokio::spawn(async move {
-        if let Err(e) = serve(
-   tokio::net::TcpListener::bind(&addr).await.unwrap(),
-   app.into_make_service(),
+let server = tokio::spawn(async move {
+    if let Err(e) = serve(
+        tokio::net::TcpListener::bind(&addr).await.unwrap(),
+        app.into_make_service(),
+    )
+    .await
+    {
+        eprintln!("Error en el servidor: {}", e);
+    }
+});
 
-        )
-        .await
-        {
-            eprintln!("Error en el servidor: {}", e);
-        }
-    });
 
     // Esperar un momento para asegurarnos de que el servidor esté listo
     sleep(Duration::from_millis(100)).await;
@@ -265,4 +272,3 @@ let cors = CorsLayer::new()
     // Terminar servidor al salir de la consola
     server.abort();
 }
-
