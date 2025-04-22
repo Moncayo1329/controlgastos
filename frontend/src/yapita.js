@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import './pagefirst.css'
 import axios from 'axios';
 
 const API_URL = 'http://127.0.0.1:4000';
@@ -79,10 +80,10 @@ console.log("Enviando gasto:", gasto);
 
   return (
     <form onSubmit={agregarGasto}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
-        <div style={{ display: 'flex', gap: '16px' }}>
+      <div className="form-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
+        <div className="form-content d-flex flex-column gap-3"style={{ maxWidth:'400px', width:'100%' }}>
           {/* Descripción */}
-          <div style={boxStyle}>
+          <div className="form-field"style={boxStyle}>
             <p><strong>Descripción:</strong></p>
             <input
               type="text"
@@ -95,7 +96,7 @@ console.log("Enviando gasto:", gasto);
           </div>
 
           {/* Monto */}
-          <div style={boxStyle}>
+          <div className=" form-field" style={boxStyle}>
             <p><strong>Monto:</strong></p>
             <input
               type="text"
@@ -109,10 +110,9 @@ console.log("Enviando gasto:", gasto);
           </div>
 
           {/* Categoría */}
-          <div style={boxStyle}>
+          <div className="form-field" style={boxStyle}>
             <p><strong>Categoría:</strong></p>
-            <input
-              type={categoria}
+            <select
               placeholder="Escribe la categoría"
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
@@ -130,7 +130,7 @@ console.log("Enviando gasto:", gasto);
 const boxStyle = {
   border: '1px solid #ccc',
   borderRadius: '10px',
-  padding: '16px',
+  padding: '20px',
   width: '250px',
   boxShadow: '0 4px 8px rgba(29, 29, 29, 0.1)',
   backgroundColor: '#fff'
