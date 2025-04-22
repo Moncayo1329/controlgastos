@@ -66,6 +66,37 @@
       padding: 20px;
     }
   }
+
+
+  /* Celular intermedio (360px - 576px, ej. 375px, 425px) */
+@media (min-width: 360px) and (max-width: 576px) {
+    .form-container {
+      padding: 15px;
+      margin: 0 auto; /* Centrado, sin desplazamiento grande */
+      max-width: 90%; /* Evita que ocupe todo el ancho */
+      margin-left:63px;
+      text-align:center;
+    }
+  
+    .form-content {
+      max-width: 350px; /* Ligeramente más estrecho para mejor proporción */
+    }
+  
+    .form-field {
+      padding: 15px;
+      font-size: 14px; /* Texto más pequeño para mejor ajuste */
+    }
+  
+    .form-field input,
+    .form-field select {
+      font-size: 14px;
+    }
+  
+    .submit-button {
+      width: 100%;
+    }
+  }
+  
   
   /* Desktop (769px en adelante) */
   @media (min-width: 769px) {
