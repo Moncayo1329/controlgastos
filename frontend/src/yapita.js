@@ -80,8 +80,8 @@ console.log("Enviando gasto:", gasto);
 
   return (
     <form onSubmit={agregarGasto}>
-      <div className="form-container" style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '20px' }}>
-        <div className="form-content d-flex flex-column gap-3"style={{ maxWidth:'400px', width:'100%' }}>
+      <div className="form-container" style={{ display: 'flex', flexDirection: 'column', gap: '30px', padding: '20px' }}>
+        <div className="form-content d-flex flex-column gap-60"style={{ maxWidth:'400px', width:'100%' }}>
           {/* Descripción */}
           <div className="form-field"style={boxStyle}>
             <p><strong>Descripción:</strong></p>
@@ -91,7 +91,7 @@ console.log("Enviando gasto:", gasto);
               value={descripcion}
               onChange={(e) => setDescripcion(e.target.value)}
               required
-              style={{ padding: "5px", width: "100%" }}
+              style={{ padding: "12px", width: "100%" }}
             />
           </div>
 
@@ -104,7 +104,7 @@ console.log("Enviando gasto:", gasto);
               value={monto}
               onChange={handleMontoChange}
               required
-              style={{ padding: "5px", width: "100%" }}
+              style={{ padding: "12px", width: "100%" }}
             />
             <small>Formateado: {formatMoney(monto)}</small>
           </div>
@@ -116,7 +116,7 @@ console.log("Enviando gasto:", gasto);
               placeholder="Escribe la categoría"
               value={categoria}
               onChange={(e) => setCategoria(e.target.value)}
-              style={{ padding: "5px", width: "100%" }}
+              style={{ padding: "12px", width: "100%" }}
             />
           </div>
         </div>
@@ -132,6 +132,7 @@ const boxStyle = {
   borderRadius: '10px',
   padding: '20px',
   width: '250px',
+  height:'170px',
   boxShadow: '0 4px 8px rgba(29, 29, 29, 0.1)',
   backgroundColor: '#fff'
 };

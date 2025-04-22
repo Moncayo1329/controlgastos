@@ -4,44 +4,41 @@
 .form-container{
     display:flex;
     flex-direction:column;
-    align-intems:center;
+    align-items: center;
     padding:20px;
     min-height:100vh;
-  margin-right: 800px; /* Mueve el formulario 100px hacia la derecha */
+    margin-left: 10px;
 }
 
 
+.form-content{
+    display:flex;
+    flex-direction:column;
+    gap:40px;
+    width:100%;
+    max-width:400px;
+}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+/* Estilos para cada campo */
+.form-field {
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  
 
 
 /* Media Queries */
 
 /* Celular (hasta 576px) */ 
 
-@media(max-width:576px){
+@media(min-width:320px) and (max-width:576px){
     .form-container{
       padding:10px;
+      margin-left:25px
     }
     .form-content {
       max-width: 100%;
@@ -57,6 +54,8 @@
   @media (min-width: 577px) and (max-width: 768px) {
     .form-container {
       padding: 20px;
+      margin-left:150px/* Centrado */
+
     }
   
     .form-content {
@@ -74,7 +73,8 @@
       /* Centrar el formulario en desktop */
       justify-content: center;
       /* Puedes moverlo a la izquierda o derecha ajustando margin */
-      margin: 0 auto; /* Centrado */
+      margin: 0 auto; 
+      margin-left:900px/* Centrado */
       /* margin-left: 100px; */ /* Para mover a la izquierda */
       /* margin-right: 100px; */ /* Para mover a la derecha */
     }
