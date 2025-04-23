@@ -104,10 +104,9 @@
       /* Centrar el formulario en desktop */
       justify-content: center;
       /* Puedes moverlo a la izquierda o derecha ajustando margin */
-      margin: 0 auto; 
-      margin-left:900px/* Centrado */
-      /* margin-left: 100px; */ /* Para mover a la izquierda */
-      /* margin-right: 100px; */ /* Para mover a la derecha */
+      margin: -150px auto 0 auto;
+      margin-top:-300px;
+      margin-left:500px;
     }
   
     .form-content {
@@ -121,4 +120,41 @@
     .submit-button {
       width: 200px;
     }
+.App{
+  margin-top:150px;
+  margin-right:500px;
+}
+
+.App p {
+  font-size: 100px; /* más grande en desktop */
+}
+
+.App h3 {
+  font-size: 24px;
+}
+
+
+
+
   }
+
+  @media (min-width: 1012px) {
+    /* Ajustes para pantallas grandes (como laptops grandes o monitores) */
+    .form-container {
+      justify-content: center;
+      /* Puedes moverlo a la izquierda o derecha ajustando margin */
+      margin: -150px auto 0 auto;
+      margin-top:-300px;
+      margin-left:750px;
+    }
+  
+    .form-content {
+      max-width: 650px;
+    }
+  
+    .submit-button {
+      width: 250px;
+    }
+  }
+  
+  
