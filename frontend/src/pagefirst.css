@@ -28,6 +28,9 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
   
+
+  
+  
   
 
 
@@ -65,6 +68,9 @@
     .form-field {
       padding: 20px;
     }
+    .submit-button {
+      width: 100%;
+    }
   }
 
 
@@ -91,22 +97,22 @@
     .form-field select {
       font-size: 14px;
     }
-  
-    .submit-button {
-      width: 100%;
+
+    .submit-button{
+      margin-left:100px;
     }
+  
   }
   
   
-  /* Desktop (769px en adelante) */
-  @media (min-width: 769px) {
+  
+  @media (min-width: 770px) and (max-width: 1010px) {
     .form-container {
       /* Centrar el formulario en desktop */
       justify-content: center;
       /* Puedes moverlo a la izquierda o derecha ajustando margin */
-      margin: -150px auto 0 auto;
-      margin-top:-300px;
-      margin-left:500px;
+      margin-top:-400px;
+      margin-left:600px;
     }
   
     .form-content {
@@ -138,14 +144,14 @@
 
   }
 
-  @media (min-width: 1012px) {
+  @media (min-width: 1011px) {
     /* Ajustes para pantallas grandes (como laptops grandes o monitores) */
     .form-container {
       justify-content: center;
       /* Puedes moverlo a la izquierda o derecha ajustando margin */
       margin: -150px auto 0 auto;
-      margin-top:-300px;
-      margin-left:750px;
+      margin-top:-400px;
+      margin-left:900px;
     }
   
     .form-content {
@@ -154,6 +160,18 @@
   
     .submit-button {
       width: 250px;
+    }
+    .App{
+      margin-top:150px;
+      margin-right:400px;
+    }
+    
+    .App p {
+      font-size: 100px; /* más grande en desktop */
+    }
+    
+    .App h3 {
+      font-size: 24px;
     }
   }
   

@@ -121,7 +121,7 @@ console.log("Enviando gasto:", gasto);
           </div>
         </div>
 
-        <button type="submit" style={{ width: "150px", padding: "10px" }}>Agregar Gasto</button>
+        <button className="submit-button" type="submit" style={{ width: "150px", padding: "10px" }}>Agregar Gasto</button>
       </div>
     </form>
   );
