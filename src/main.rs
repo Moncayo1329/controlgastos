@@ -16,9 +16,9 @@ use axum::serve;
 use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
 use axum::http::{HeaderValue, header::CONTENT_TYPE, Method};
+use supabase::SupabaseClient;
+use serde_json::json; // Para construir objetos JSON fácilmente
 
-// Tipo para la base de datos en memoria
-type BD = Arc<Mutex<Vec<Gasto>>>;
 
 // Estructura para entrada de gastos
 #[derive(Deserialize, Serialize)]
@@ -48,27 +48,57 @@ fn guardar_en_archivo(gastos: &Vec<Gasto>) -> std::io::Result<()> {
 
 // Rutas de la API
 async fn obtener_gastos(State(db): State<BD>) -> Json<Vec<Gasto>> {
-    let db = db.lock().unwrap();
-    Json(db.clone())
+    let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
+    let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
+    let client = SupabaseClient::new(supabase_url,supabase_key);
+
+    let response = client
+    .from("gastos")
+    .select("*")
+    .execute()
+    .await
+    .unwrap();
+   
+    println!("Respuesta de Supabase: {:?}", response);
+
+    let gastos: Vec<Gasto> = serde_json::from_str(&response.body()).unwrap();
+
+    Json(gastos)
 }
 
 async fn agregar_gasto(State(db): State<BD>, Json(payload): Json<GastoInput>) -> &'static str {
-    let mut db = db.lock().unwrap();
-    let nuevo_gasto = Gasto {
-        descripcion: payload.descripcion,
-        monto: payload.monto,
-        categoria: payload.categoria,
-    };
-    println!("Gasto agregado: {:?}", nuevo_gasto); // Depuración
-    db.push(nuevo_gasto);
-    if let Err(e) = guardar_en_archivo(&db) {
-        eprintln!("Error al guardar en archivo: {}", e);
-    }
-    "Gasto agregado"
+    let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
+    let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
+    let client = SupabaseClient::new(supabase_url,supabase_key);
+   
+    let nuevo_gasto = json!({
+        "descripcion": payload.descripcion,
+        "monto": payload.monto,
+        "categoria":payload.categoria.to_string,
+    });
+
+    let response = client
+    .from("gastos")
+    .insert(nuevo_gasto)
+    .execute()
+    .await
+    .unwrap();
+
+    println!("Respuesta de Supabase:{:?}", response)
+
+    "Gasto agregado (en Supabase)"
 }
 
 async fn gastos_por_categoria(Path(cat): Path<String>, State(db): State<BD>) -> Json<Vec<Gasto>> {
     let cat = match cat.to_lowercase().as_str() {
+
+
+        let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
+    let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
+        let client = SupabaseClient::new(supabase_url,supabase_key);
+
+
+
         "comida" => Categoria::Comida,
         "transporte" => Categoria::Transporte,
         "entretenimiento" => Categoria::Entretenimiento,
@@ -77,9 +107,25 @@ async fn gastos_por_categoria(Path(cat): Path<String>, State(db): State<BD>) -> 
         _ => Categoria::Otros,
     };
 
-    let db = db.lock().unwrap();
-    let filtrados = filtrar_por_categoria(&db, cat);
-    Json(filtrados)
+    let response = client
+        .from("gastos")
+        .select("*")
+        .eq("categoria", cat.clone()) // Usa cat (string) directamente
+        .execute()
+        .await
+        .unwrap();
+
+    println!("Respuesta de Supabase: {:?}", response);
+
+    // Deserializar la respuesta a Vec<Gasto>
+    let mut gastos: Vec<Gasto> = serde_json::from_str(&response.body()).unwrap();
+
+    // Actualizar la categoría de string a enum en los resultados
+    for gasto in &mut gastos {
+        gasto.categoria = categoria_enum.clone(); // Usa el enum convertido
+    }
+
+    Json(gastos)
 }
 
 // Consola que interactúa con la API
@@ -226,7 +272,12 @@ async fn consola() {
 #[tokio::main]
 async fn main() {
     // Base de datos en memoria
-    let base_datos: BD = Arc::new(Mutex::new(Vec::new()));
+  // Supabase 
+
+  let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
+    let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
+  let client = SupabaseClient::new(supabase_url,supabase_key);
+  let base_datos: BD = Arc::new(Mutex::new(Vec::new()));
 
     // Configurar CORS
     let cors = CorsLayer::new()
