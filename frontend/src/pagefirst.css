@@ -29,7 +29,9 @@
   }
   
 
-  
+  .submit-button {
+    margin-right:30px;
+  }
   
   
 
@@ -38,17 +40,17 @@
 
 /* Celular (hasta 576px) */ 
 
-@media(min-width:320px) and (max-width:576px){
+@media(min-width:375px) and (max-width:576px){
     .form-container{
-      padding:10px;
-      margin-left:25px
+      padding: 20px;
+      margin-left:10px/* Centrado */
     }
     .form-content {
       max-width: 100%;
     }
   
     .submit-button {
-      margin-right:150px;
+      margin-right:100px;
     }
   }
   
@@ -152,12 +154,8 @@
       margin-left:900px;
     }
   
-    .form-content {
-      max-width: 650px;
-    }
-  
     .submit-button {
-      margin-right:100px;
+      margin-right:130px;
     }
     .App{
       margin-top:150px;
