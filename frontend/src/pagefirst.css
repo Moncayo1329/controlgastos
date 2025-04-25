@@ -48,7 +48,7 @@
     }
   
     .submit-button {
-      width: 100%;
+      margin-right:150px;
     }
   }
   
@@ -69,7 +69,7 @@
       padding: 20px;
     }
     .submit-button {
-      width: 100%;
+      margin-right:120px;
     }
   }
 
@@ -112,7 +112,7 @@
       justify-content: center;
       /* Puedes moverlo a la izquierda o derecha ajustando margin */
       margin-top:-500px;
-      margin-left:600px;
+      margin-left:70vw;
     }
   
     .form-content {
@@ -124,7 +124,7 @@
     }
   
     .submit-button {
-      width: 200px;
+      margin-right:-50px;
     }
 .App{
   margin-top:150px;
@@ -148,8 +148,6 @@
     /* Ajustes para pantallas grandes (como laptops grandes o monitores) */
     .form-container {
       justify-content: center;
-      /* Puedes moverlo a la izquierda o derecha ajustando margin */
-      margin: -150px auto 0 auto;
       margin-top:-400px;
       margin-left:900px;
     }
@@ -159,7 +157,7 @@
     }
   
     .submit-button {
-      width: 250px;
+      margin-right:100px;
     }
     .App{
       margin-top:150px;
@@ -173,6 +171,10 @@
     .App h3 {
       font-size: 24px;
     }
+
+    
+
+
   }
   
   

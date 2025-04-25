@@ -96,7 +96,7 @@ console.log("Enviando gasto:", gasto);
           </div>
 
           {/* Monto */}
-          <div className=" form-field" style={boxStyle}>
+          <div className="form-field" style={boxStyle}>
             <p><strong>Monto:</strong></p>
             <input
               type="text"

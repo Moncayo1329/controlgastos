@@ -1,7 +1,19 @@
+body{
+  background-color: #DAA520;
+}
+
+
 
 .App {
   text-align: center;
   font-family: "Jaro", sans-serif;
+
+}
+
+.App p{
+  text-align: center;
+  font-family: "Jaro", sans-serif;
+  font-size:40px
 
 }
 
