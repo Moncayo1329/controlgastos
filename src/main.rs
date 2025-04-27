@@ -1,22 +1,22 @@
 mod gastos;
 
 use axum::{
-    extract::{Path, State},
+    extract::Path,
     routing::{get, post},
     Json, Router,
 };
 use std::fs::OpenOptions;
 use std::io::Write;
-use gastos::{Gasto, Categoria, filtrar_por_categoria};
+use gastos::{Gasto, Categoria};
 use serde::{Deserialize, Serialize};
-use std::{net::SocketAddr, sync::{Arc, Mutex}};
+use std::net::SocketAddr;
 use tokio::time::{sleep, Duration};
 use reqwest::Client;
 use axum::serve;
-use tokio::net::TcpListener;
 use tower_http::cors::CorsLayer;
-use axum::http::{HeaderValue, header::CONTENT_TYPE, Method};
-use supabase::SupabaseClient;
+use axum::http::header::CONTENT_TYPE; 
+use supabase_rs::SupabaseClient;
+use std::env;
 use serde_json::json; // Para construir objetos JSON fácilmente
 
 
@@ -47,58 +47,66 @@ fn guardar_en_archivo(gastos: &Vec<Gasto>) -> std::io::Result<()> {
 }
 
 // Rutas de la API
-async fn obtener_gastos(State(db): State<BD>) -> Json<Vec<Gasto>> {
+async fn obtener_gastos() -> Json<Vec<Gasto>> {
     let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
     let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
-    let client = SupabaseClient::new(supabase_url,supabase_key);
+    let client = SupabaseClient::new(supabase_url,supabase_key)
+    .expect("Error al crear cliente de Supabase");
+
 
     let response = client
-    .from("gastos")
-    .select("*")
+    .select("gastos")
     .execute()
     .await
-    .unwrap();
+    .expect("Error al obtener gastos de Supabase"); 
    
     println!("Respuesta de Supabase: {:?}", response);
 
-    let gastos: Vec<Gasto> = serde_json::from_str(&response.body()).unwrap();
-
-    Json(gastos)
+    let gastos: Vec<Gasto> = serde_json::from_value(serde_json::to_value(response).unwrap())
+    .unwrap_or_default();
+Json(gastos)
 }
 
-async fn agregar_gasto(State(db): State<BD>, Json(payload): Json<GastoInput>) -> &'static str {
+async fn agregar_gasto(Json(payload): Json<GastoInput>) -> &'static str {
     let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
     let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
-    let client = SupabaseClient::new(supabase_url,supabase_key);
+    let client = SupabaseClient::new(supabase_url, supabase_key)
+        .expect("Error al crear cliente de Supabase");
+
+    let categoria_str = match payload.categoria {
+        Categoria::Comida => "comida",
+        Categoria::Transporte => "transporte",
+        Categoria::Entretenimiento => "entretenimiento",
+        Categoria::Alimentos => "alimentos",
+        Categoria::Otros => "otros",
+    };
    
     let nuevo_gasto = json!({
-        "descripcion": payload.descripcion,
+       "descripcion": payload.descripcion,
         "monto": payload.monto,
-        "categoria":payload.categoria.to_string,
+        "categoria": categoria_str,
     });
 
     let response = client
-    .from("gastos")
-    .insert(nuevo_gasto)
-    .execute()
+    .insert("gastos", nuevo_gasto)
     .await
-    .unwrap();
+    .expect("Error al insertar gasto en Supabase");
 
     println!("Respuesta de Supabase:{:?}", response);
 
     "Gasto agregado (en Supabase)"
 }
 
-async fn gastos_por_categoria(Path(cat): Path<String>, State(db): State<BD>) -> Json<Vec<Gasto>> {
+async fn gastos_por_categoria(Path(cat): Path<String>) -> Json<Vec<Gasto>> {
 
     let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
    let  supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
-    let  client = SupabaseClient::new(supabase_url,supabase_key);
+   let client = SupabaseClient::new(supabase_url, supabase_key)
+   .expect("Error al crear cliente de Supabase");
 
 
-    
+
     let cat = match cat.to_lowercase().as_str() {
-
         "comida" => Categoria::Comida,
         "transporte" => Categoria::Transporte,
         "entretenimiento" => Categoria::Entretenimiento,
@@ -107,22 +115,30 @@ async fn gastos_por_categoria(Path(cat): Path<String>, State(db): State<BD>) -> 
         _ => Categoria::Otros,
     };
 
+    let cat_str = match cat {
+        Categoria::Comida => "comida",
+        Categoria::Transporte => "transporte",
+        Categoria::Entretenimiento => "entretenimiento",
+        Categoria::Alimentos => "alimentos",
+        Categoria::Otros => "otros",
+    };
+
     let response = client
-        .from("gastos")
-        .select("*")
-        .eq("categoria", cat.clone()) // Usa cat (string) directamente
-        .execute()
+      .from("gastos")
+      .eq("categoria", cat_str)
+      .client.select("*")
+     .execute()
         .await
-        .unwrap();
+        .expect("Error al filtrar gastos por categoría");
 
     println!("Respuesta de Supabase: {:?}", response);
 
     // Deserializar la respuesta a Vec<Gasto>
-    let mut gastos: Vec<Gasto> = serde_json::from_str(&response.body()).unwrap();
-
+    let mut gastos: Vec<Gasto> = serde_json::from_value(serde_json::to_value(response).unwrap())
+        .unwrap_or_default();
     // Actualizar la categoría de string a enum en los resultados
     for gasto in &mut gastos {
-        gasto.categoria = categoria_enum.clone(); // Usa el enum convertido
+        gasto.categoria = cat.clone(); // Usa el enum convertido
     }
 
     Json(gastos)
@@ -277,7 +293,6 @@ async fn main() {
   let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
     let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
   let client = SupabaseClient::new(supabase_url,supabase_key);
-  let base_datos: BD = Arc::new(Mutex::new(Vec::new()));
 
     // Configurar CORS
     let cors = CorsLayer::new()
@@ -295,8 +310,7 @@ async fn main() {
         .route("/gastos", get(obtener_gastos))
         .route("/gasto", post(agregar_gasto))
         .route("/gastos/:categoria", get(gastos_por_categoria))
-        .layer(cors)
-        .with_state(base_datos.clone());
+        .layer(cors);
 
         // Iniciar servidor en una tarea separada
 let addr = SocketAddr::from(([127, 0, 0, 1], 4000));
