@@ -84,20 +84,20 @@ async fn agregar_gasto(State(db): State<BD>, Json(payload): Json<GastoInput>) ->
     .await
     .unwrap();
 
-    println!("Respuesta de Supabase:{:?}", response)
+    println!("Respuesta de Supabase:{:?}", response);
 
     "Gasto agregado (en Supabase)"
 }
 
 async fn gastos_por_categoria(Path(cat): Path<String>, State(db): State<BD>) -> Json<Vec<Gasto>> {
+
+    let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
+   let  supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
+    let  client = SupabaseClient::new(supabase_url,supabase_key);
+
+
+    
     let cat = match cat.to_lowercase().as_str() {
-
-
-        let supabase_url = env::var("SUPABASE_URL").expect("SUPABASE_URL no encontrada");
-    let supabase_key = env::var("SUPABASE_KEY").expect("SUPABASE_KEY no encontrada");
-        let client = SupabaseClient::new(supabase_url,supabase_key);
-
-
 
         "comida" => Categoria::Comida,
         "transporte" => Categoria::Transporte,
